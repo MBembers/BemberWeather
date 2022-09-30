@@ -13,5 +13,8 @@ import retrofit2.http.Query;
 interface APIInterface {
 
     @GET("/data/2.5/weather?units=metric&appid=b46ef128398cdc3f6308de2eb8b5f588")
-    Call<WeatherData> getWeatherData(@Query("lat") int lat, @Query("lon") int lon);
+    Call<WeatherData> getWeatherData(@Query("lat") double lat, @Query("lon") double lon);
+
+    @GET("/data/2.5/weather?units=metric&appid=b46ef128398cdc3f6308de2eb8b5f588")
+    Call<WeatherData> getWeatherDataCity(@Query("q") String q);
 }
