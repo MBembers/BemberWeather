@@ -13,7 +13,9 @@ import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
@@ -52,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
     LocationManager locationManager;
     EditText searchBox;
     Button searchButton;
+    LocationListener locationListener;
     double lat;
     double lon;
     boolean isSearch;
@@ -110,25 +113,41 @@ public class MainActivity extends AppCompatActivity {
 
         requestPermissions(new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(@NonNull Location location) {
+                if(!isSearch){
+                    Log.d("XXX", "onLocationChanged: " + location.getLatitude() + location.getLongitude());
+                    lon = location.getLongitude();
+                    lat = location.getLatitude();
+                    getWeather();
+
+                }
+            }
+        };
+
+
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             OnGPS();
         } else {
             getLocation();
         }
 
-        binding.refreshButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                getLocation();
-            }
-        });
+//        binding.refreshButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                getLocation();
+//            }
+//        });
 
         binding.addButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, MainActivity.class);
-                intent.putExtra("isSearch", true);
-                startActivity(intent);
+                if(!isSearch){
+                    Intent intent = new Intent(MainActivity.this, MainActivity.class);
+                    intent.putExtra("isSearch", true);
+                    startActivity(intent);
+                }
             }
         });
     }
@@ -155,17 +174,8 @@ public class MainActivity extends AppCompatActivity {
                 checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         } else {
-            Location locationGPS = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            if (locationGPS != null) {
-                lat = locationGPS.getLatitude();
-                lon = locationGPS.getLongitude();
-
-                Log.d("XXX", "LAT: " + lat + " LON: " + lon);
-                getWeather();
-            }
-            else {
-                Toast.makeText(this, "Unable to find location.", Toast.LENGTH_SHORT).show();
-            }
+            Log.d("XXX", "getLocation: dzialaj kutasie");
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 50, locationListener);
         }
     }
 
