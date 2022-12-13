@@ -77,16 +77,17 @@ public class MainActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
 
             RelativeLayout searchLayout = new RelativeLayout(this);
-            RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dpToPixels(50));
+            RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dpToPixels(40));
             layoutParams.setMargins(0, dpToPixels(5), 0,0);
             searchLayout.setLayoutParams(layoutParams);
             binding.linearMain.addView(searchLayout, 0);
 
             searchBox = new EditText(this);
             searchBox.setBackground(getDrawable(R.drawable.search));
-            searchBox.setLayoutParams(new ViewGroup.LayoutParams(dpToPixels(300), dpToPixels(50)));
+            searchBox.setLayoutParams(new ViewGroup.LayoutParams(dpToPixels(300), dpToPixels(40)));
             searchBox.setGravity(Gravity.CENTER);
             searchBox.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+            searchBox.setTextSize(20);
             searchLayout.addView(searchBox);
 
             searchButton = new Button(this);
@@ -133,13 +134,6 @@ public class MainActivity extends AppCompatActivity {
             getLocation();
         }
 
-//        binding.refreshButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                getLocation();
-//            }
-//        });
-
         binding.addButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -158,6 +152,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+
             }
         }).setNegativeButton("No", new DialogInterface.OnClickListener() {
             @Override
@@ -174,7 +169,6 @@ public class MainActivity extends AppCompatActivity {
                 checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         } else {
-            Log.d("XXX", "getLocation: dzialaj kutasie");
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 50, locationListener);
         }
     }
@@ -186,6 +180,12 @@ public class MainActivity extends AppCompatActivity {
             call = apiInterface.getWeatherDataCity(city);
         }
         else{
+            if(lat == 0.0){
+                binding.location.setText("fetching...");
+                binding.temperature.setText("");
+                binding.description.setText("");
+                return;
+            }
             call = apiInterface.getWeatherData((double) lat, (double) lon);
         }
         call.enqueue(new Callback<WeatherData>() {
@@ -227,12 +227,23 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if(permissions.length == 0) {
+            Toast.makeText(this, "Enable location in settings", Toast.LENGTH_LONG).show();
+            return;
+        }
         String permission = permissions[0];
         int grantResult = grantResults[0];
         if(requestCode == 1){
             if(permission.equals(Manifest.permission.ACCESS_FINE_LOCATION)){
                 if(grantResult == PackageManager.PERMISSION_GRANTED){
                     getWeather();
+                }
+                else {
+                    Log.d("XXX", "onRequestPermissionsResult: REQUESTING");
+                    Toast.makeText(this, "Enable location in settings", Toast.LENGTH_LONG).show();
+//                    Intent intent = new Intent(MainActivity.this, MainActivity.class);
+//                    intent.putExtra("isSearch", true);
+//                    startActivity(intent);
                 }
             }
         }
